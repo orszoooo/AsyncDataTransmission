@@ -2,9 +2,9 @@
 `timescale 1ns/100ps
 
 module dtu(
-    input CLK,
-    input Start, //Start transmisji
-    input [9:0] SWIn,
+    input clk,
+    input tx_start, 
+    input [9:0] tx_pi,
     output [6:0] Hex1,
     output [6:0] Hex2,
     output [6:0] Hex3,
@@ -22,7 +22,7 @@ clkdiv #(
     .Divider(500000)
 ) clkdiv100Hz(
     .Enable(1'b0),
-    .CLK(CLK),
+    .clk(clk),
     .presCLK(clk_100Hz)
 );
 
@@ -31,19 +31,19 @@ clkdiv #(
     .Divider(5000000)
 ) clkdiv10Hz(
     .Enable(1'b0),
-    .CLK(CLK),
+    .clk(clk),
     .presCLK(clk_10Hz)
 );
 
-Transmiter Tx1(
-    .CLK(CLK),
-    .Start(Start),
-    .SWIn(SWIn),
+tx Tx1(
+    .clk(clk),
+    .tx_start(tx_start),
+    .tx_pi(tx_pi),
     .Tx(serial_connection)
 );
 
-Receiver Rx1(
-    .CLK(CLK),
+rx Rx1(
+    .clk(clk),
     .Rx(serial_connection),
     .Ready(ready),
     .Frame(Frame), 
@@ -51,7 +51,7 @@ Receiver Rx1(
 );
 
 dispDriver d1(
-    .CLK(CLK),
+    .clk(clk),
     .Frame(Frame),
     .Valid(valid),
     .Ready(ready),

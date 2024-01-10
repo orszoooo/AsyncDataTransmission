@@ -10,14 +10,14 @@ wire rx_busy;
 wire rx_ready;
 wire rx_error;
 
-Receiver Rx1(
-    .CLK(clk),
-    .RXD(rx),
-    .DATA_ACK(ack),
-    .Data(frame),
-    .RX_BUSY(rx_busy),
-    .RX_READY(rx_ready),
-    .RX_ERROR(rx_error)
+rx Rx1(
+    .clk(clk),
+    .rx_si(rx),
+    .rx_data_ack(ack),
+    .rx_po(frame),
+    .rx_busy(rx_busy),
+    .rx_ready(rx_ready),
+    .rx_error(rx_error)
 );
 
 //-------------
@@ -63,7 +63,7 @@ end
 
 // Writing VCD waveform
 initial begin
-	$dumpfile("rx_sim.vcd");
+	$dumpfile("./Output/rx_sim.vcd");
 	$dumpvars(0, Rx1);
 	$dumpon;
 end

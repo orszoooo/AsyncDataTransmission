@@ -18,7 +18,7 @@ output reg tx_busy;
 
 reg [WIDTH-1:0] data;
 reg current_state, next_state;
-reg [3:0] count; 
+reg [3:0] bit_sent_count; //counts from 10 to 0, every sent bit results in decrementation
 
 parameter IDLE = 1'b0;
 parameter SEND = 1'b1;
@@ -38,7 +38,7 @@ always @(*) begin
 
         SEND: begin
             tx_busy <= 1'b1;
-            if(count > 4'd0) begin
+            if(bit_sent_count > 4'h0) begin
                 next_state = SEND;
             end
             else
@@ -55,18 +55,18 @@ always @(posedge clk) begin
     case(current_state)
         IDLE: begin
             data <= tx_pi;
-            count <= 4'd10;
+            bit_sent_count <= 4'hA;
             tx_so <= 1'b1;
         end
 
         SEND: begin
             //Sending data 
-            if(count == 4'd10) begin
+            if(bit_sent_count == 4'hA) begin
                 tx_so <= 1'b0; //Start bit
-                count <= count - 1'b1; 
+                bit_sent_count <= bit_sent_count - 1'b1; 
             end
-            else if(count > 4'd0) begin
-                count <= count - 1'b1;
+            else if(bit_sent_count > 4'h0) begin
+                bit_sent_count <= bit_sent_count - 1'b1;
 
 				data <= {data[WIDTH-1:0], 1'b1};
 				tx_so <= data[WIDTH-1];
