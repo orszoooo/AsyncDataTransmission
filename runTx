@@ -1,0 +1,6 @@
+rm -f Tx_sim
+rm -f Tx_sim.vcd
+iverilog -Wall -s Transmiter_tb -o Tx_sim Transmiter.v Transmiter_tb.v 
+vvp Tx_sim
+
+

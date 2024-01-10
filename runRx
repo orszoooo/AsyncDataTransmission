@@ -1,0 +1,6 @@
+rm -f Rx_sim
+rm -f Rx_sim.vcd
+iverilog -Wall -s Receiver_tb -o Rx_sim Receiver.v Receiver_tb.v 
+vvp Rx_sim
+
+
