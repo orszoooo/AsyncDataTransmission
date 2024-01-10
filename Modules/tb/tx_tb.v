@@ -1,4 +1,4 @@
-`timescale 1ns / 1ps
+`timescale 1ns/100ps
 
 module tx_tb;
 
@@ -9,11 +9,11 @@ wire Tx;
 wire TX_BUSY;
 
 tx Tx1(
-    .CLK(clk),
-    .Start(start),
-    .SWIn(switches),
-    .TXD(Tx),
-    .TX_BUSY(TX_BUSY)
+    .clk(clk),
+    .tx_start(start),
+    .tx_pi(switches),
+    .tx_so(Tx),
+    .tx_busy(TX_BUSY)
 );
 
 //-------------

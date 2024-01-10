@@ -1,6 +1,0 @@
-rm -f TxRx_sim
-rm -f TxRx_sim.vcd
-iverilog -Wall -s TxRx_tb -o TxRx_sim TxRx.v TxRx_tb.v Transmiter.v Receiver.v clkdiv.v dispDMUX.v dispDriver.v transcoderBCDto7SEG.v
-vvp TxRx_sim
-
-

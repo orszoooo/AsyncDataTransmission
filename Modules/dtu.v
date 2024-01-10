@@ -1,6 +1,7 @@
-`timescale 1ns / 1ps
+//Data Transmission Unit
+`timescale 1ns/100ps
 
-module Data_Transmission_Unit(
+module dtu(
     input CLK,
     input Start, //Start transmisji
     input [9:0] SWIn,
