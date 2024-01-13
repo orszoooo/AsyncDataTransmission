@@ -1,64 +1,116 @@
 //Data Transmission Unit
-`timescale 1ns/100ps
-
+`timescale 1ns/1ns
 module dtu(
-    input clk,
-    input tx_start, 
-    input [9:0] tx_pi,
-    output [6:0] Hex1,
-    output [6:0] Hex2,
-    output [6:0] Hex3,
-    output [6:0] Hex4
+    en, 
+    clk_tx,
+    clk_rx,
+    clk_div_ld,
+    clk_div_sel,
+    tx_start,
+    tx_character_sel,
+    rx_ack,
+    rx_character1,
+    rx_character2,
+    tx_busy,
+    rx_busy,
+    rx_ready,
+    rx_error
+);
+//parameter CLK_DIVISOR = 17'd100000;
+parameter CLK_DIVISOR = 17'd4; //simulation
+
+
+input en; 
+input clk_tx;
+input clk_rx;
+input clk_div_ld;
+input [1:0] clk_div_sel; //Clock divisor preset 1, 4, 8, 16
+input tx_start;
+input [1:0] tx_character_sel; //Select preprogrammed character to send
+input rx_ack;
+output [6:0] rx_character1;
+output [6:0] rx_character2;
+output tx_busy;
+output rx_busy;
+output rx_ready;
+output rx_error;
+
+wire clk_tx_en;
+wire clk_rx_en;
+
+assign clk_tx_en = en ? clk_tx : 1'b0; 
+assign clk_rx_en = en ? clk_rx : 1'b0; 
+
+//Preprogrammed characters select
+reg [3:0] TX_CHARACTERS [7:0]; //4 hex numbers
+
+initial begin
+    TX_CHARACTERS[0] = 8'h77;
+    TX_CHARACTERS[1] = 8'hEF;
+    TX_CHARACTERS[2] = 8'hA9;
+    TX_CHARACTERS[3] = 8'h10;
+end
+
+//Clock dividers
+wire clk_tx_500Hz, clk_tx_div, clk_rx_500Hz;
+
+clk_div  #(
+    .DIVIDE_BY(CLK_DIVISOR),
+    .WIDTH(17))
+clk_div_tx1 (
+    .en(en),
+    .clk_in(clk_tx_en),
+    .clk_out(clk_tx_500Hz)
 );
 
-wire ready;
-wire serial_connection;
-wire clk_100Hz, clk_10Hz;
-wire valid;
-wire [9:0] Frame;
-
-clkdiv #(
-    .Width(20),
-    .Divider(500000)
-) clkdiv100Hz(
-    .Enable(1'b0),
-    .clk(clk),
-    .presCLK(clk_100Hz)
+clk_div_preset clk_div_tx2 (
+    .en(en),
+    .divisor_ld(clk_div_ld),
+    .divisor_sel(clk_div_sel),
+    .clk_in(clk_tx_500Hz),
+    .clk_out(clk_tx_div)
 );
 
-clkdiv #(
-    .Width(26),
-    .Divider(5000000)
-) clkdiv10Hz(
-    .Enable(1'b0),
-    .clk(clk),
-    .presCLK(clk_10Hz)
+clk_div #(
+    .DIVIDE_BY(CLK_DIVISOR),
+    .WIDTH(17))
+clk_div_rx (
+    .en(en),
+    .clk_in(clk_rx_en),
+    .clk_out(clk_rx_500Hz)
 );
 
-tx Tx1(
-    .clk(clk),
+//Transmitter
+wire tx_to_rx;
+
+tx tx1(
+    .clk(clk_tx_div),
     .tx_start(tx_start),
-    .tx_pi(tx_pi),
-    .Tx(serial_connection)
+    .tx_pi({4'h0,TX_CHARACTERS[tx_character_sel]}), 
+    .tx_so(tx_to_rx), 
+    .tx_busy(tx_busy)
 );
 
-rx Rx1(
-    .clk(clk),
-    .Rx(serial_connection),
-    .Ready(ready),
-    .Frame(Frame), 
-    .Valid(valid)
+wire [7:0] rx_output;
+
+rx rx1(
+    .clk(clk_rx_500Hz),
+    .rx_si(tx_to_rx), //serial input
+    .rx_data_ack(rx_ack),
+    .rx_po(rx_output), //parallel output
+    .rx_busy(rx_busy),
+    .rx_ready(rx_ready),
+    .rx_error(rx_error)
 );
 
-dispDriver d1(
-    .clk(clk),
-    .Frame(Frame),
-    .Valid(valid),
-    .Ready(ready),
-    .Hex1(Hex1),
-    .Hex2(Hex2),
-    .Hex3(Hex3),
-    .Hex4(Hex4)
+led_disp char_disp1(
+    .in(rx_output[7:4]),
+    .out(rx_character1)
+);
+
+led_disp char_disp2(
+    .in(rx_output[3:0]),
+    .out(rx_character2)
 );
 
 endmodule

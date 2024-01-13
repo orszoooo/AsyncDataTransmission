@@ -1,5 +1,4 @@
-`timescale 1ns/100ps
-
+`timescale 1ns/1ns
 module tx #(
     parameter WIDTH = 8 // 1 bit Start, 8 bit Data, 1 Stop bit
 )(

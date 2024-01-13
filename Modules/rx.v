@@ -1,14 +1,22 @@
-`timescale 1ns/100ps
+`timescale 1ns/1ns
 
 module rx(
-    input clk,
-    input rx_si, //serial input
-    input rx_data_ack,
-    output reg [7:0] rx_po, //parallel output
-    output reg rx_busy,
-    output reg rx_ready,
-    output reg rx_error
+    clk,
+    rx_si, //serial input
+    rx_data_ack,
+    rx_po, //parallel output
+    rx_busy,
+    rx_ready,
+    rx_error
 );
+
+input clk;
+input rx_si; //serial input
+input rx_data_ack;
+output reg [7:0] rx_po; //parallel output
+output reg rx_busy;
+output reg rx_ready;
+output reg rx_error;
 
 reg [3:0] current_state, next_state;
 reg [3:0] bit_received_count; //counts from 7 to 0, every sent received results in decrementation
