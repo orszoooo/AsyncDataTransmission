@@ -61,7 +61,7 @@ clk_div_preset clk_div_tx2 (
     .en(en),
     .divisor_ld(clk_div_ld),
     .divisor_sel(clk_div_sel),
-    .clk_in(clk_tx), //clk_tx_500Hz for FPGA
+    .clk_in(clk_tx_500Hz), //clk_tx_500Hz for FPGA
     .clk_out(clk_tx_div)
 );
 
@@ -89,7 +89,7 @@ tx tx1(
 wire [7:0] rx_output;
 
 rx rx1(
-    .clk(clk_rx), //clk_rx_500Hz for FPGA
+    .clk(clk_rx_500Hz), //clk_rx_500Hz for FPGA
     .en(en),
     .sampling_mode_ld(clk_div_ld),
     .sampling_mode(clk_div_sel),

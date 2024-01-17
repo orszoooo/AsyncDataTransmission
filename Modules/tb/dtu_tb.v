@@ -44,21 +44,20 @@ initial
 begin 
     EN = 1'b0; 
     CLK_DIV_LD = 1'b0;
-    CLK_DIV_SEL = 2'h0;
+    CLK_DIV_SEL = 2'h1;
     TX_START = 1'b0;
-    TX_CHARACTER_SEL = 2'h0;
+    TX_CHARACTER_SEL = 2'h1;
     RX_ACK = 1'b0;
-    #8 
-    CLK_DIV_SEL = 2'b01; 
-    #8
+    #2
     CLK_DIV_LD = 1'b1;
-    #8
+    #2
     CLK_DIV_LD = 1'b0;
     #8
-    EN = 1'b1; 
-    #8
+    EN = 1'b1;
+    #40
     TX_START = 1'b1;
-    #64
+    #32
+    TX_START = 1'b0;
 	#1000 $finish;
 end
 

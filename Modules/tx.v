@@ -3,13 +3,14 @@ module tx #(
     parameter WIDTH = 8 // 1 bit Start, 8 bit Data, 1 Stop bit
 )(
     clk,
+    en,
     tx_start,
     tx_pi, //parallel input
     tx_so, //serial output
     tx_busy
 );
 
-input clk;
+input clk, en;
 input tx_start; 
 input [WIDTH-1:0] tx_pi;
 output reg tx_so;
@@ -24,56 +25,59 @@ parameter SEND = 1'b1;
 
 //State machine
 always @(*) begin
-    case(current_state)
-        IDLE: begin
-            if(tx_start) begin
-                next_state = SEND;
+    if(en) begin
+        case(current_state)
+            IDLE: begin
+                if(tx_start) begin
+                    next_state = SEND;
+                end
+                else
+                    next_state = IDLE;
+
+                tx_busy <= 1'b0;
             end
-            else
-                next_state = IDLE;
 
-            tx_busy <= 1'b0;
-        end
-
-        SEND: begin
-            tx_busy <= 1'b1;
-            if(bit_sent_count > 4'h0) begin
-                next_state = SEND;
+            SEND: begin
+                tx_busy <= 1'b1;
+                if(bit_sent_count > 4'h0) begin
+                    next_state = SEND;
+                end
+                else
+                    next_state = IDLE;
             end
-            else
-                next_state = IDLE;
-        end
-        default: next_state = IDLE; 
-    endcase
-
+            default: next_state = IDLE; 
+        endcase
+    end
 end
 
 always @(posedge clk) begin 
-    current_state <= next_state;
+    if(en) begin
+        current_state <= next_state;
 
-    case(current_state)
-        IDLE: begin
-            data <= tx_pi;
-            bit_sent_count <= 4'hA;
-            tx_so <= 1'b1;
-        end
-
-        SEND: begin
-            //Sending data 
-            if(bit_sent_count == 4'hA) begin
-                tx_so <= 1'b0; //Start bit
-                bit_sent_count <= bit_sent_count - 1'b1; 
+        case(current_state)
+            IDLE: begin
+                data <= tx_pi;
+                bit_sent_count <= 4'hA;
+                tx_so <= 1'b1;
             end
-            else if(bit_sent_count > 4'h0) begin
-                bit_sent_count <= bit_sent_count - 1'b1;
 
-				data <= {data[WIDTH-1:0], 1'b1};
-				tx_so <= data[WIDTH-1];
+            SEND: begin
+                //Sending data 
+                if(bit_sent_count == 4'hA) begin
+                    tx_so <= 1'b0; //Start bit
+                    bit_sent_count <= bit_sent_count - 1'b1; 
+                end
+                else if(bit_sent_count > 4'h0) begin
+                    bit_sent_count <= bit_sent_count - 1'b1;
+
+                    data <= {data[WIDTH-1:0], 1'b1};
+                    tx_so <= data[WIDTH-1];
+                end
             end
-        end
 
-        default: tx_so <= 1'b1;
-    endcase
+            default: tx_so <= 1'b1;
+        endcase
+    end
 end
 
 endmodule
