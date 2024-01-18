@@ -10,11 +10,12 @@ module rx(
     rx_ready,
     rx_error
 );
+localparam WIDTH = 8;
 
 input clk, en;
 input rx_si; //serial input
 input rx_data_ack;
-output reg [7:0] rx_po; //parallel output
+output reg [WIDTH-1:0] rx_po; //parallel output
 output reg rx_busy;
 output reg rx_ready;
 output reg rx_error;
@@ -108,6 +109,7 @@ always@(posedge clk) begin
                 rx_error <= 1'b0;
                 rx_busy <= 1'b0;
                 rx_finished <= 1'b0;
+                rx_po <= {WIDTH{1'b0}};
             end
 
             SYNC: begin
@@ -161,6 +163,13 @@ always@(posedge clk) begin
                 baud_sync <= SYNC_START_VAL;
             end
         endcase
+    end
+    else begin
+            rx_ready <= 1'b0;
+            rx_error <= 1'b0;
+            rx_busy <= 1'b0;
+            rx_finished <= 1'b0;
+            rx_po <= {WIDTH{1'b0}};
     end
 end
 
