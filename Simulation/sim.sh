@@ -24,7 +24,7 @@ if [ "$#" -ne 0 ]; then
     fi
 
     if [ "$1" = "dtu" ]; then 
-        modules_input="dtu tx rx clk_div clk_div_preset led_disp"
+        modules_input="dtu tx rx clk_div led_disp"
     fi
 else
     echo Provide module name you want to simulate i.e. ./sim.sh tx 

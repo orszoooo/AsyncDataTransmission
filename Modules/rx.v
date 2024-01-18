@@ -3,8 +3,6 @@
 module rx(
     clk,
     en,
-    sampling_mode_ld,
-    sampling_mode,
     rx_si, //serial input
     rx_data_ack,
     rx_po, //parallel output
@@ -14,29 +12,25 @@ module rx(
 );
 
 input clk, en;
-input sampling_mode_ld;
-input [1:0] sampling_mode;
 input rx_si; //serial input
 input rx_data_ack;
 output reg [7:0] rx_po; //parallel output
 output reg rx_busy;
 output reg rx_ready;
 output reg rx_error;
-
 reg [3:0] current_state, next_state;
 reg [3:0] bit_received_count; //counts from 7 to 0, every sent received results in decrementation
 reg [3:0] baud_sync; 
 
 reg [3:0] BITS_TO_RECEIVE = 4'd8;
-reg [3:0] SYNC_START_VAL;
-reg [3:0] SYNC_SAMPLING_VAL;
+reg [3:0] SYNC_START_VAL = 4'h2;
+reg [3:0] SYNC_SAMPLING_VAL = 4'h7;
 
-
-parameter IDLE = 4'h0;
-parameter SYNC = 4'h1;
-parameter RECV = 4'h2;
-parameter VALID_TEST = 4'h3;
-parameter RESULT = 4'h4;
+localparam IDLE = 4'h0;
+localparam SYNC = 4'h1;
+localparam RECV = 4'h2;
+localparam VALID_TEST = 4'h3;
+localparam RESULT = 4'h4;
 
 reg [1:0] lastRXD;
 reg rx_finished;
@@ -60,11 +54,6 @@ always@(*) begin
                 else begin
                     next_state = IDLE;
                 end
-
-                rx_ready = 1'b0;
-                rx_error = 1'b0;
-                rx_busy = 1'b0;
-                rx_finished = 1'b0;
             end
 
             SYNC: begin
@@ -72,8 +61,8 @@ always@(*) begin
                     next_state = SYNC;
                 else if(baud_sync == 4'h0)
                     next_state = RECV;
-
-                rx_busy = 1'b1;
+                else
+                    next_state = IDLE; 
             end
 
             RECV: begin
@@ -81,6 +70,8 @@ always@(*) begin
                     next_state = RECV;
                 else if(bit_received_count == 4'h0)
                     next_state = VALID_TEST;
+                else
+                    next_state = IDLE;
             end
 
             VALID_TEST: begin
@@ -100,6 +91,8 @@ always@(*) begin
             default: next_state = IDLE; 
         endcase                                                                                                         
     end
+	else
+		next_state = IDLE; 
 end
 
 always@(posedge clk) begin 
@@ -111,6 +104,10 @@ always@(posedge clk) begin
             IDLE: begin
                 bit_received_count <= BITS_TO_RECEIVE; 
                 baud_sync <= SYNC_START_VAL; 
+				rx_ready <= 1'b0;
+                rx_error <= 1'b0;
+                rx_busy <= 1'b0;
+                rx_finished <= 1'b0;
             end
 
             SYNC: begin
@@ -118,6 +115,8 @@ always@(posedge clk) begin
                     baud_sync <= baud_sync - 1'b1;
                 else
                     baud_sync <= SYNC_SAMPLING_VAL;
+						  
+					rx_busy = 1'b1;
             end
 
             RECV: begin
@@ -151,7 +150,10 @@ always@(posedge clk) begin
             end 
 
             RESULT:begin
-
+                rx_finished <= 1'b0;
+                rx_busy <= 1'b0;
+                rx_error <= rx_error;
+                rx_ready <= 1'b1;
             end
 
             default: begin
@@ -159,32 +161,6 @@ always@(posedge clk) begin
                 baud_sync <= SYNC_START_VAL;
             end
         endcase
-    end
-    else begin
-        if(sampling_mode_ld) begin
-            case(sampling_mode)
-                2'h0: begin //do not use
-                    SYNC_START_VAL = 4'h0;
-                    SYNC_SAMPLING_VAL = 4'h1;
-                end
-                2'h1: begin
-                    SYNC_START_VAL = 4'h0;
-                    SYNC_SAMPLING_VAL = 4'h3;
-                end
-                2'h2: begin
-                    SYNC_START_VAL = 4'h2;
-                    SYNC_SAMPLING_VAL = 4'h7;
-                end
-                2'h3: begin
-                    SYNC_START_VAL = 4'h5;
-                    SYNC_SAMPLING_VAL = 4'hF;
-                end
-                default: begin
-                    SYNC_START_VAL = 4'h5;
-                    SYNC_SAMPLING_VAL = 4'hF;
-                end
-            endcase
-       end
     end
 end
 

@@ -4,8 +4,6 @@ module dtu_tb;
 
 reg CLK_TX, CLK_RX;
 reg EN;
-reg [1:0] CLK_DIV_SEL;
-reg CLK_DIV_LD;
 reg TX_START;
 reg [1:0] TX_CHARACTER_SEL;
 reg RX_ACK;
@@ -20,8 +18,6 @@ dtu dtu1(
     .en(EN), 
     .clk_tx(CLK_TX),
     .clk_rx(CLK_RX),
-    .clk_div_ld(CLK_DIV_LD),
-    .clk_div_sel(CLK_DIV_SEL),
     .tx_start(TX_START),
     .tx_character_sel(TX_CHARACTER_SEL),
     .rx_ack(RX_ACK),
@@ -43,21 +39,25 @@ always #1 CLK_RX = ~CLK_RX;
 initial
 begin 
     EN = 1'b0; 
-    CLK_DIV_LD = 1'b0;
-    CLK_DIV_SEL = 2'h1;
     TX_START = 1'b0;
     TX_CHARACTER_SEL = 2'h1;
     RX_ACK = 1'b0;
-    #2
-    CLK_DIV_LD = 1'b1;
-    #2
-    CLK_DIV_LD = 1'b0;
-    #8
+    #10
     EN = 1'b1;
     #40
     TX_START = 1'b1;
     #32
     TX_START = 1'b0;
+    #200
+    RX_ACK = 1'b1;
+    #2
+    RX_ACK = 1'b0;
+    TX_CHARACTER_SEL = 2'h3;
+    #2
+    TX_START = 1'b1;
+    #20
+    TX_START = 1'b0;
+
 	#1000 $finish;
 end
 

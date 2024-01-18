@@ -4,8 +4,6 @@ module dtu(
     en, 
     clk_tx,
     clk_rx,
-    clk_div_ld,
-    clk_div_sel,
     tx_start,
     tx_character_sel,
     rx_ack,
@@ -16,14 +14,14 @@ module dtu(
     rx_ready,
     rx_error
 );
-parameter CLK_DIVISOR = 17'd100000;
-
+localparam CLK_DIVISOR = 17'd100000;
+localparam CLK_DIVISOR_WIDTH = 17;
+localparam CLK_TX_DIVISOR = 4'h8;
+localparam CLK_TX_DIVISOR_WIDTH = 4;
 
 input en; 
 input clk_tx;
 input clk_rx;
-input clk_div_ld;
-input [1:0] clk_div_sel; //Clock divisor preset 1, 4, 8, 16
 input tx_start;
 input [1:0] tx_character_sel; //Select preprogrammed character to send
 input rx_ack;
@@ -46,39 +44,40 @@ initial begin
 end
 
 //Clock dividers
-wire clk_tx_500Hz, clk_tx_div, clk_rx_500Hz;
+wire clk_tx_div1, clk_tx_div2, clk_rx_div;
 
 clk_div  #(
     .DIVIDE_BY(CLK_DIVISOR),
-    .WIDTH(17))
+    .WIDTH(CLK_DIVISOR_WIDTH))
 clk_div_tx1 (
     .en(en),
     .clk_in(clk_tx),
-    .clk_out(clk_tx_500Hz)
+    .clk_out(clk_tx_div1)
 );
 
-clk_div_preset clk_div_tx2 (
+clk_div  #(
+    .DIVIDE_BY(CLK_TX_DIVISOR),
+    .WIDTH(CLK_TX_DIVISOR_WIDTH))
+clk_div_tx2 (
     .en(en),
-    .divisor_ld(clk_div_ld),
-    .divisor_sel(clk_div_sel),
-    .clk_in(clk_tx), //clk_tx_500Hz for FPGA
-    .clk_out(clk_tx_div)
+    .clk_in(clk_tx),
+    .clk_out(clk_tx_div2)
 );
 
 clk_div #(
     .DIVIDE_BY(CLK_DIVISOR),
-    .WIDTH(17))
+    .WIDTH(CLK_DIVISOR_WIDTH))
 clk_div_rx (
     .en(en),
     .clk_in(clk_rx), 
-    .clk_out(clk_rx_500Hz)
+    .clk_out(clk_rx_div)
 );
 
 //Transmitter
 wire tx_to_rx;
 
 tx tx1(
-    .clk(clk_tx_div),
+    .clk(clk_tx_div2),
     .en(en),
     .tx_start(tx_start),
     .tx_pi(TX_CHARACTERS[tx_character_sel]), 
@@ -89,10 +88,8 @@ tx tx1(
 wire [7:0] rx_output;
 
 rx rx1(
-    .clk(clk_rx), //clk_rx_500Hz for FPGA
+    .clk(clk_rx), //clk_rx_div for FPGA
     .en(en),
-    .sampling_mode_ld(clk_div_ld),
-    .sampling_mode(clk_div_sel),
     .rx_si(tx_to_rx), //serial input
     .rx_data_ack(rx_ack),
     .rx_po(rx_output), //parallel output
