@@ -3,6 +3,7 @@
 module rx_tb;
 
 reg clk;
+reg en;
 reg rx;
 reg ack;
 wire [7:0] frame;
@@ -11,6 +12,7 @@ wire rx_ready;
 wire rx_error;
 
 rx Rx1(
+    .en(en),
     .clk(clk),
     .rx_si(rx),
     .rx_data_ack(ack),
@@ -27,6 +29,7 @@ always #5 clk = ~clk;
 
 initial
 begin 
+    en = 1'b1;
     ack = 1'b0;
     rx = 1'b1;
     #50
